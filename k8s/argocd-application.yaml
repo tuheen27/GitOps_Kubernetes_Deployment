@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: 'https://github.com/tuheen27/GitOps_Kubernetes_Deployment.git'
     targetRevision: HEAD
-    path: 'todo-app/k8s'
+    path: 'k8s'
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: todo-app
