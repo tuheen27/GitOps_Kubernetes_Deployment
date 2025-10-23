@@ -4,10 +4,8 @@ import os
 
 app = Flask(__name__)
 
-# Database configuration
-DATABASE = 'todo.db'
+DATABASE = os.environ.get('DATABASE', 'todo.db')
 
-# Get database connection
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
@@ -15,14 +13,12 @@ def get_db():
         db.row_factory = sqlite3.Row
     return db
 
-# Close database connection when app context ends
 @app.teardown_appcontext
 def close_db(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
 
-# Initialize the database
 def init_db():
     with app.app_context():
         db = get_db()
@@ -30,14 +26,12 @@ def init_db():
             db.executescript(f.read())
         db.commit()
 
-# Home route
 @app.route('/')
 def index():
     db = get_db()
     tasks = db.execute('SELECT id, task, done FROM todos').fetchall()
     return render_template('index.html', tasks=tasks)
 
-# Add new task
 @app.route('/add', methods=['POST'])
 def add():
     task_content = request.form['task']
@@ -48,7 +42,6 @@ def add():
         db.commit()
     return redirect(url_for('index'))
 
-# Mark task as done
 @app.route('/done/<int:id>')
 def done(id):
     db = get_db()
@@ -58,7 +51,6 @@ def done(id):
     db.commit()
     return redirect(url_for('index'))
 
-# Delete task
 @app.route('/delete/<int:id>')
 def delete(id):
     db = get_db()
@@ -67,7 +59,10 @@ def delete(id):
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    # Create database if it doesn't exist
+    db_dir = os.path.dirname(DATABASE)
+    if db_dir and not os.path.exists(db_dir):
+        os.makedirs(db_dir)
+    
     if not os.path.exists(DATABASE):
         init_db()
     app.run(debug=True, host='0.0.0.0', port=5000)
